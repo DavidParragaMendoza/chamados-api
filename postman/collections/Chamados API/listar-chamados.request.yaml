@@ -1,0 +1,32 @@
+$kind: http-request
+name: Listar chamados con filtros
+method: GET
+url: '{{base_url}}/chamados?status=ABERTO&prioridade=ALTA&categoriaId={{categoria_id}}&solicitanteId={{solicitante_id}}&page=0&size=10&sort=dataAbertura,desc'
+queryParams:
+  - key: status
+    value: 'ABERTO'
+  - key: prioridade
+    value: 'ALTA'
+  - key: categoriaId
+    value: '{{categoria_id}}'
+  - key: solicitanteId
+    value: '{{solicitante_id}}'
+  - key: page
+    value: '0'
+  - key: size
+    value: '10'
+  - key: sort
+    value: 'dataAbertura,desc'
+order: 12000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status 200', () => {
+        pm.response.to.have.status(200);
+      });
+      pm.test('Respuesta paginada filtrada', () => {
+        const body = pm.response.json();
+        pm.expect(body.content).to.be.an('array');
+        pm.expect(body.content.every((chamado) => chamado.status === 'ABERTO')).to.eql(true);
+      });

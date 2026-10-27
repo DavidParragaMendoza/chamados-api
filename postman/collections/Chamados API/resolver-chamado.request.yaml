@@ -1,0 +1,28 @@
+$kind: http-request
+name: Resolver chamado
+method: PATCH
+url: '{{base_url}}/chamados/{{novo_chamado_id}}/resolver'
+order: 14000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "solucao": "Se reinició el servicio y se validó el acceso.",
+      "tecnicoId": {{tecnico_id}}
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status 200', () => {
+        pm.response.to.have.status(200);
+      });
+      const body = pm.response.json();
+      pm.test('Chamado resuelto con solución y fecha de cierre', () => {
+        pm.expect(body.status).to.eql('RESOLVIDO');
+        pm.expect(body.solucao).to.be.a('string');
+        pm.expect(body.dataFechamento).to.be.a('string');
+      });

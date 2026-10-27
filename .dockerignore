@@ -1,0 +1,10 @@
+target/
+.git/
+.gitignore
+.idea/
+.vscode/
+docs/
+postman/
+*.md
+*.log
+.mvn/

@@ -1,0 +1,15 @@
+$kind: http-request
+name: Listar interacciones
+method: GET
+url: '{{base_url}}/chamados/{{chamado_atendimento_id}}/interacoes'
+order: 18000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status 200', () => {
+        pm.response.to.have.status(200);
+      });
+      pm.test('Lista de interacciones', () => {
+        pm.expect(pm.response.json()).to.be.an('array');
+      });

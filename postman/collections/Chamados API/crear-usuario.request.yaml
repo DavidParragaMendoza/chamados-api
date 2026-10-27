@@ -1,0 +1,40 @@
+$kind: http-request
+name: Registrar usuario
+method: POST
+url: '{{base_url}}/usuarios'
+order: 7000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "nome": "Usuario Demo",
+      "email": "{{usuario_demo_email}}",
+      "matricula": "{{usuario_demo_matricula}}",
+      "tipo": "SOLICITANTE",
+      "setorId": {{setor_id}}
+    }
+scripts:
+  - type: beforeRequest
+    language: text/javascript
+    code: |-
+      const suffix = Date.now();
+      pm.collectionVariables.set('usuario_demo_email', `demo${suffix}@ifrn.edu.br`);
+      pm.collectionVariables.set('usuario_demo_matricula', `DEMO${suffix}`);
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status 201', () => {
+        pm.response.to.have.status(201);
+      });
+      pm.test('Location presente', () => {
+        pm.expect(pm.response.headers.get('Location')).to.be.a('string');
+      });
+      const body = pm.response.json();
+      pm.test('Usuario registrado', () => {
+        pm.expect(body.tipo).to.eql('SOLICITANTE');
+        pm.expect(body.email).to.include('@ifrn.edu.br');
+      });
+      pm.collectionVariables.set('novo_usuario_id', String(body.id));

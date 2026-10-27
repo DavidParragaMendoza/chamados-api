@@ -1,0 +1,1208 @@
+{
+  "info": {
+    "_postman_id": "b7f3c2d1-4a5e-4b6c-8d9e-0f1a2b3c4d5e",
+    "name": "Chamados API",
+    "description": "Colección de la API REST do Sistema de Chamados do IFRN (Spec 001).\n\nCubre la totalidad de los requisitos funcionales exigidos por el enunciado del profesor (RF-1 a RF-39) con 24 peticiones agrupadas en 5 carpetas: Setores (5), Categorias (6), Usuários (4), Chamados (7) e Interações (2).\n\n**Política de errores**: 400 Bad Request exclusivo para validación de entrada (@Valid, JSON malformado); 409 Conflict para violaciones de reglas de negocio y transiciones inválidas; 404 Not Found para recursos inexistentes. Toda respuesta de error incluye timestamp, status, mensagem y caminho.\n\n**Ejecución idempotente**: Las peticiones de apertura y transiciones de estado utilizan scripts prerequest y pm.sendRequest con identificadores y variables temporales únicas (siglaTemp, emailTemp, matriculaTemp, tituloTemp) para garantizar que la colección puede reejecutarse indefinidamente sin colisiones.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "setorId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "categoriaId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "solicitanteId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "tecnicoId",
+      "value": "2",
+      "type": "string"
+    },
+    {
+      "key": "usuarioId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "chamadoId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "siglaTemp",
+      "value": "TEMP",
+      "type": "string"
+    },
+    {
+      "key": "emailTemp",
+      "value": "temp@ifrn.edu.br",
+      "type": "string"
+    },
+    {
+      "key": "matriculaTemp",
+      "value": "0000000",
+      "type": "string"
+    },
+    {
+      "key": "tituloTemp",
+      "value": "Chamado de teste",
+      "type": "string"
+    },
+    {
+      "key": "chamadoAssumirId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "chamadoResolverId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "chamadoCancelarId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "var stamp = Date.now().toString().slice(-9);",
+          "pm.collectionVariables.set('siglaTemp', 'T' + stamp);",
+          "pm.collectionVariables.set('emailTemp', 'postman' + stamp + '@ifrn.edu.br');",
+          "pm.collectionVariables.set('matriculaTemp', 'P' + stamp);",
+          "pm.collectionVariables.set('tituloTemp', 'Chamado de teste ' + stamp);"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Setores",
+      "description": "Gestión de sectores (CRUD completo). RF-1 a RF-5, RF-26, RF-27.",
+      "item": [
+        {
+          "name": "Criar setor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Setor de Teste {{siglaTemp}}\",\n  \"sigla\": \"{{siglaTemp}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/setores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "setores"
+              ]
+            },
+            "description": "**RF-1** — Registra un sector con `ativo = true` y responde **201 Created** con la cabecera `Location`.\n\n**RF-2** — Si la `sigla` ya existe responde **409 Conflict**."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Cabecera Location presente', function () { pm.expect(pm.response.headers.get('Location')).to.be.a('string'); });",
+                  "pm.test('Sector activo', function () { pm.expect(pm.response.json().ativo).to.eql(true); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar setores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/setores?page=0&size=10&sort=nome",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "setores"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Página (base 0)"
+                },
+                {
+                  "key": "size",
+                  "value": "10",
+                  "description": "Tamaño de página"
+                },
+                {
+                  "key": "sort",
+                  "value": "nome",
+                  "description": "Orden"
+                },
+                {
+                  "key": "nome",
+                  "value": "Tecnologia",
+                  "description": "Filtro opcional por nombre",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "**RF-3** — Devuelve una página de sectores con **200 OK**, admitiendo filtro opcional por `nome` y paginación estándar."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Respuesta paginada', function () { var b = pm.response.json(); pm.expect(b.content).to.be.an('array'); pm.expect(b.totalElements).to.be.a('number'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar setor por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/setores/{{setorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "setores",
+                "{{setorId}}"
+              ]
+            },
+            "description": "**RF-26** — Devuelve los detalles de un sector por ID con **200 OK**, o **404 Not Found** si no existe."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Setor devuelto', function () {",
+                  "  var b = pm.response.json();",
+                  "  pm.expect(b.id).to.eql(Number(pm.variables.get('setorId')));",
+                  "  pm.expect(b).to.have.property('nome');",
+                  "  pm.expect(b).to.have.property('sigla');",
+                  "  pm.expect(b).to.have.property('ativo');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar setor",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Tecnologia da Informação e Comunicação\",\n  \"sigla\": \"TI\",\n  \"ativo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/setores/{{setorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "setores",
+                "{{setorId}}"
+              ]
+            },
+            "description": "**RF-27** — Actualiza un sector existente con **200 OK**. Valida unicidad de sigla (**409 Conflict**) y existencia (**404 Not Found**)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Setor atualizado', function () {",
+                  "  var b = pm.response.json();",
+                  "  pm.expect(b.id).to.eql(Number(pm.variables.get('setorId')));",
+                  "  pm.expect(b.sigla).to.eql('TI');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir setor",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/setores/{{setorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "setores",
+                "{{setorId}}"
+              ]
+            },
+            "description": "**RF-4 / RF-5** — Borrado lógico o físico. Si tiene tickets vinculados, responde **409 Conflict**."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204, 409 o 404', function () { pm.expect(pm.response.code).to.be.oneOf([204, 409, 404]); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Categorias",
+      "description": "Gestión de categorías (CRUD completo y listados). RF-6 a RF-9, RF-28 a RF-30.",
+      "item": [
+        {
+          "name": "Criar categoria",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Categoria Teste {{siglaTemp}}\",\n  \"setorId\": {{setorId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/categorias",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categorias"
+              ]
+            },
+            "description": "**RF-6** — Registra una categoría vinculada a un sector existente y responde **201 Created**."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Categoria vinculada ao setor', function () { pm.expect(pm.response.json().setorId).to.be.a('number'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar categorias",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categorias?page=0&size=10&sort=nome",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categorias"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Página (base 0)"
+                },
+                {
+                  "key": "size",
+                  "value": "10",
+                  "description": "Tamaño de página"
+                },
+                {
+                  "key": "sort",
+                  "value": "nome",
+                  "description": "Orden"
+                },
+                {
+                  "key": "nome",
+                  "value": "Redes",
+                  "description": "Filtro opcional por nombre",
+                  "disabled": true
+                },
+                {
+                  "key": "setorId",
+                  "value": "{{setorId}}",
+                  "description": "Filtro opcional por sector",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "**RF-30** — Listado paginado de categorías con filtros opcionales combinables `nome` y `setorId`, retornando **200 OK**."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Respuesta paginada de categorias', function () {",
+                  "  var b = pm.response.json();",
+                  "  pm.expect(b.content).to.be.an('array');",
+                  "  pm.expect(b.totalElements).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar categorias por setor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/setores/{{setorId}}/categorias",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "setores",
+                "{{setorId}}",
+                "categorias"
+              ]
+            },
+            "description": "**RF-7** — Devuelve las categorías del sector especificado con **200 OK**."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Lista de categorias', function () { pm.expect(pm.response.json()).to.be.an('array'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar categoria por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categorias/{{categoriaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categorias",
+                "{{categoriaId}}"
+              ]
+            },
+            "description": "**RF-28** — Detalle de una categoría por ID con **200 OK**, o **404 Not Found** si no existe."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Categoria devuelta', function () {",
+                  "  var b = pm.response.json();",
+                  "  pm.expect(b.id).to.eql(Number(pm.variables.get('categoriaId')));",
+                  "  pm.expect(b).to.have.property('nome');",
+                  "  pm.expect(b).to.have.property('setorId');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar categoria",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Redes de Computadores\",\n  \"setorId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/categorias/{{categoriaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categorias",
+                "{{categoriaId}}"
+              ]
+            },
+            "description": "**RF-29** — Actualiza una categoría existente con **200 OK**. Valida existencia del sector (**404 Not Found**)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Categoria atualizada', function () {",
+                  "  var b = pm.response.json();",
+                  "  pm.expect(b.id).to.eql(Number(pm.variables.get('categoriaId')));",
+                  "  pm.expect(b.nome).to.eql('Redes de Computadores');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir categoria",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categorias/{{categoriaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categorias",
+                "{{categoriaId}}"
+              ]
+            },
+            "description": "**RF-8 / RF-9** — Elimina una categoría. Si tiene tickets asociados, responde **409 Conflict**."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204, 409 o 404', function () { pm.expect(pm.response.code).to.be.oneOf([204, 409, 404]); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Usuários",
+      "description": "Gestión de usuarios institucionales (registro, consulta y actualización). RF-10 a RF-12, RF-25, RF-31.",
+      "item": [
+        {
+          "name": "Registrar usuário",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Usuário Teste {{matriculaTemp}}\",\n  \"email\": \"{{emailTemp}}\",\n  \"matricula\": \"{{matriculaTemp}}\",\n  \"tipo\": \"SOLICITANTE\",\n  \"setorId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "description": "**RF-10** — Registra un usuario y responde **201 Created** con `Location`.\n\n**RF-11** — Si el email ya existe, responde **409 Conflict**."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Cabecera Location presente', function () { pm.expect(pm.response.headers.get('Location')).to.be.a('string'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar usuários",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios?page=0&size=10&sort=nome",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Página (base 0)"
+                },
+                {
+                  "key": "size",
+                  "value": "10",
+                  "description": "Tamaño de página"
+                },
+                {
+                  "key": "sort",
+                  "value": "nome",
+                  "description": "Orden"
+                },
+                {
+                  "key": "nome",
+                  "value": "João",
+                  "description": "Filtro opcional por nombre",
+                  "disabled": true
+                },
+                {
+                  "key": "tipo",
+                  "value": "SOLICITANTE",
+                  "description": "Filtro opcional por tipo",
+                  "disabled": true
+                },
+                {
+                  "key": "setorId",
+                  "value": "1",
+                  "description": "Filtro opcional por sector",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "**RF-12** — Consulta paginada de usuarios con filtros opcionales combinables."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Respuesta paginada', function () { var b = pm.response.json(); pm.expect(b.content).to.be.an('array'); pm.expect(b.totalElements).to.be.a('number'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar usuário por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{usuarioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{usuarioId}}"
+              ]
+            },
+            "description": "**RF-25** — Detalle de usuario por ID con **200 OK**, o **404 Not Found** si no existe."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Usuario devuelto', function () { pm.expect(pm.response.json().id).to.be.a('number'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar usuário",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"João Silva Atualizado\",\n  \"email\": \"joao@ifrn.edu.br\",\n  \"matricula\": \"2023101\",\n  \"tipo\": \"SOLICITANTE\",\n  \"setorId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{usuarioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{usuarioId}}"
+              ]
+            },
+            "description": "**RF-31** — Actualiza un usuario existente con **200 OK**. Valida unicidad de email (**409 Conflict**) y existencia (**404 Not Found**)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Usuario atualizado', function () {",
+                  "  var b = pm.response.json();",
+                  "  pm.expect(b.id).to.eql(Number(pm.variables.get('usuarioId')));",
+                  "  pm.expect(b.nome).to.eql('João Silva Atualizado');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Chamados",
+      "description": "Ciclo de vida y consultas de tickets. RF-13 a RF-18, RF-21, RF-22, RF-32 a RF-34.",
+      "item": [
+        {
+          "name": "Abrir chamado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"{{tituloTemp}}\",\n  \"descricao\": \"Chamado de teste aberto pela coleção de Postman.\",\n  \"local\": \"Laboratório de Redes\",\n  \"prioridade\": \"ALTA\",\n  \"categoriaId\": {{categoriaId}},\n  \"solicitanteId\": {{solicitanteId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chamados",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "chamados"
+              ]
+            },
+            "description": "**RF-13** — Abre un ticket en estado `ABERTO` con prioridad informada (o `MEDIA` por defecto). Guarda `chamadoId` para las pruebas."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Chamado ABERTO', function () { pm.expect(pm.response.json().status).to.eql('ABERTO'); });",
+                  "var body = pm.response.json();",
+                  "if (body && body.id) { pm.collectionVariables.set('chamadoId', body.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar chamado por id com interações",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/chamados/{{chamadoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "chamados",
+                "{{chamadoId}}"
+              ]
+            },
+            "description": "**RF-32** — Detalla un ticket por ID con su listado completo de interacciones ordenadas por dataHora ascendente con **200 OK**."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Chamado detalhe com interações retornado', function () {",
+                  "  var b = pm.response.json();",
+                  "  pm.expect(b.id).to.eql(Number(pm.variables.get('chamadoId')));",
+                  "  pm.expect(b).to.have.property('titulo');",
+                  "  pm.expect(b).to.have.property('categoriaId');",
+                  "  pm.expect(b).to.have.property('solicitanteId');",
+                  "  pm.expect(b.interacoes).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assumir chamado",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tecnicoId\": {{tecnicoId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chamados/{{chamadoAssumirId}}/assumir",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "chamados",
+                "{{chamadoAssumirId}}",
+                "assumir"
+              ]
+            },
+            "description": "**RF-14** — Técnico asume un ticket en `ABERTO`, pasando a `EM_ATENDIMENTO`. Si el técnico es de otro sector o estado es inválido, responde **409 Conflict**."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.sendRequest({",
+                  "  url: pm.variables.replaceIn('{{baseUrl}}/chamados'),",
+                  "  method: 'POST',",
+                  "  header: { 'Content-Type': 'application/json' },",
+                  "  body: JSON.stringify({",
+                  "    titulo: 'Chamado para assumir ' + Date.now(),",
+                  "    descricao: 'Chamado creado automaticamente pela colecao de Postman.',",
+                  "    local: 'Laboratorio de Redes',",
+                  "    prioridade: 'MEDIA',",
+                  "    categoriaId: Number(pm.variables.get('categoriaId')),",
+                  "    solicitanteId: Number(pm.variables.get('solicitanteId'))",
+                  "  })",
+                  "}, function (err, res) {",
+                  "  if (err || res.code !== 201) { console.error('Falha ao criar chamado para assumir', err); return; }",
+                  "  pm.collectionVariables.set('chamadoAssumirId', res.json().id);",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Chamado EM_ATENDIMENTO', function () { pm.expect(pm.response.json().status).to.eql('EM_ATENDIMENTO'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Resolver chamado",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"solucao\": \"Foi realizada a sincronização do cadastro do usuário com o sistema de ponto eletrônico.\",\n  \"tecnicoId\": {{tecnicoId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chamados/{{chamadoResolverId}}/resolver",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "chamados",
+                "{{chamadoResolverId}}",
+                "resolver"
+              ]
+            },
+            "description": "**RF-16** — Técnico asignado resuelve el ticket con solución, pasando a `RESOLVIDO` con `dataFechamento`. Si no es el asignado o estado es inválido, responde **409 Conflict**."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var tecnicoId = Number(pm.variables.get('tecnicoId'));",
+                  "pm.sendRequest({",
+                  "  url: pm.variables.replaceIn('{{baseUrl}}/chamados'),",
+                  "  method: 'POST',",
+                  "  header: { 'Content-Type': 'application/json' },",
+                  "  body: JSON.stringify({",
+                  "    titulo: 'Chamado para resolver ' + Date.now(),",
+                  "    descricao: 'Chamado criado automaticamente pela colecao de Postman.',",
+                  "    local: 'Laboratorio de Redes',",
+                  "    prioridade: 'MEDIA',",
+                  "    categoriaId: Number(pm.variables.get('categoriaId')),",
+                  "    solicitanteId: Number(pm.variables.get('solicitanteId'))",
+                  "  })",
+                  "}, function (err, res) {",
+                  "  if (err || res.code !== 201) { console.error('Falha ao criar chamado para resolver', err); return; }",
+                  "  var novoId = res.json().id;",
+                  "  pm.sendRequest({",
+                  "    url: pm.variables.replaceIn('{{baseUrl}}/chamados/' + novoId + '/assumir'),",
+                  "    method: 'PATCH',",
+                  "    header: { 'Content-Type': 'application/json' },",
+                  "    body: JSON.stringify({ tecnicoId: tecnicoId })",
+                  "  }, function (err2, res2) {",
+                  "    if (err2 || res2.code !== 200) { console.error('Falha ao assumir chamado para resolver', err2); return; }",
+                  "    pm.collectionVariables.set('chamadoResolverId', novoId);",
+                  "  });",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Chamado RESOLVIDO', function () { pm.expect(pm.response.json().status).to.eql('RESOLVIDO'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancelar chamado",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": {{solicitanteId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chamados/{{chamadoCancelarId}}/cancelar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "chamados",
+                "{{chamadoCancelarId}}",
+                "cancelar"
+              ]
+            },
+            "description": "**RF-18** — Solicitante cancela su ticket en estado `ABERTO`, pasando a `CANCELADO`. Si no es el solicitante o el ticket no está en `ABERTO`, responde **409 Conflict**."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.sendRequest({",
+                  "  url: pm.variables.replaceIn('{{baseUrl}}/chamados'),",
+                  "  method: 'POST',",
+                  "  header: { 'Content-Type': 'application/json' },",
+                  "  body: JSON.stringify({",
+                  "    titulo: 'Chamado para cancelar ' + Date.now(),",
+                  "    descricao: 'Chamado criado automaticamente pela colecao de Postman.',",
+                  "    local: 'Laboratorio de Redes',",
+                  "    prioridade: 'BAIXA',",
+                  "    categoriaId: Number(pm.variables.get('categoriaId')),",
+                  "    solicitanteId: Number(pm.variables.get('solicitanteId'))",
+                  "  })",
+                  "}, function (err, res) {",
+                  "  if (err || res.code !== 201) { console.error('Falha ao criar chamado para cancelar', err); return; }",
+                  "  pm.collectionVariables.set('chamadoCancelarId', res.json().id);",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Chamado CANCELADO', function () { pm.expect(pm.response.json().status).to.eql('CANCELADO'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar chamados com filtros",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/chamados?status=ABERTO&prioridade=ALTA&setorId={{setorId}}&categoriaId={{categoriaId}}&page=0&size=10&sort=dataAbertura,desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "chamados"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "ABERTO",
+                  "description": "Filtro por status"
+                },
+                {
+                  "key": "prioridade",
+                  "value": "ALTA",
+                  "description": "Filtro por prioridad"
+                },
+                {
+                  "key": "setorId",
+                  "value": "{{setorId}}",
+                  "description": "Filtro por sector"
+                },
+                {
+                  "key": "categoriaId",
+                  "value": "{{categoriaId}}",
+                  "description": "Filtro por categoría"
+                },
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Página (base 0)"
+                },
+                {
+                  "key": "size",
+                  "value": "10",
+                  "description": "Tamaño de página"
+                },
+                {
+                  "key": "sort",
+                  "value": "dataAbertura,desc",
+                  "description": "Ordenación"
+                }
+              ]
+            },
+            "description": "**RF-21** — Consulta paginada con filtros combinables retornando **200 OK**."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Respuesta paginada', function () { var b = pm.response.json(); pm.expect(b.content).to.be.an('array'); pm.expect(b.totalElements).to.be.a('number'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar chamados de um usuário",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{usuarioId}}/chamados?status=ABERTO&page=0&size=10&sort=dataAbertura,desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{usuarioId}}",
+                "chamados"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "ABERTO",
+                  "description": "Filtro opcional por status"
+                },
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Página (base 0)"
+                },
+                {
+                  "key": "size",
+                  "value": "10",
+                  "description": "Tamaño de página"
+                },
+                {
+                  "key": "sort",
+                  "value": "dataAbertura,desc",
+                  "description": "Ordenación"
+                }
+              ]
+            },
+            "description": "**RF-22** — Tickets abiertos por un solicitante o asignados a un técnico, con paginación."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Respuesta paginada', function () { var b = pm.response.json(); pm.expect(b.content).to.be.an('array'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Interações",
+      "description": "Comentarios y seguimiento de tickets. RF-19, RF-20, RF-35, RF-36.",
+      "item": [
+        {
+          "name": "Criar interação",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"texto\": \"Primeira interação registrada para acompanhamento técnico.\",\n  \"autorId\": {{solicitanteId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chamados/{{chamadoId}}/interacoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "chamados",
+                "{{chamadoId}}",
+                "interacoes"
+              ]
+            },
+            "description": "**RF-19** — Registra un comentario en un ticket abierto. Solo el solicitante o técnico asignado pueden comentar (**RF-36**, **409 Conflict**)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Interação registrada', function () { pm.expect(pm.response.json().dataHora).to.be.a('string'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar interações do chamado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/chamados/{{chamadoId}}/interacoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "chamados",
+                "{{chamadoId}}",
+                "interacoes"
+              ]
+            },
+            "description": "**RF-20** — Devuelve la lista cronológica de interacciones asociadas al llamado con **200 OK**."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Lista de interações', function () { pm.expect(pm.response.json()).to.be.an('array'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

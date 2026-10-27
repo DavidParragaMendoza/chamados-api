@@ -1,0 +1,24 @@
+$kind: http-request
+name: Cancelar chamado
+method: PATCH
+url: '{{base_url}}/chamados/{{chamado_cancelar_id}}/cancelar'
+order: 16000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "usuarioId": {{solicitante_id}}
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status 200', () => {
+        pm.response.to.have.status(200);
+      });
+      pm.test('Chamado cancelado', () => {
+        pm.expect(pm.response.json().status).to.eql('CANCELADO');
+      });

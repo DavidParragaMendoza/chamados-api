@@ -1,0 +1,28 @@
+$kind: http-request
+name: Crear interacción
+method: POST
+url: '{{base_url}}/chamados/{{chamado_atendimento_id}}/interacoes'
+order: 17000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "texto": "Interacción creada desde la colección de Postman.",
+      "autorId": {{solicitante_id}}
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status 201', () => {
+        pm.response.to.have.status(201);
+      });
+      const body = pm.response.json();
+      pm.test('Interacción registrada', () => {
+        pm.expect(body.texto).to.include('Postman');
+        pm.expect(body.dataHora).to.be.a('string');
+      });
+      pm.collectionVariables.set('interacao_id', String(body.id));

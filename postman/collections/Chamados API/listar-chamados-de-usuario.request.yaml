@@ -1,0 +1,21 @@
+$kind: http-request
+name: Listar chamados de un usuario
+method: GET
+url: '{{base_url}}/usuarios/{{novo_usuario_id}}/chamados?page=0&size=10'
+queryParams:
+  - key: page
+    value: '0'
+  - key: size
+    value: '10'
+order: 10000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status 200', () => {
+        pm.response.to.have.status(200);
+      });
+      pm.test('Respuesta paginada de chamados', () => {
+        const body = pm.response.json();
+        pm.expect(body.content).to.be.an('array');
+      });

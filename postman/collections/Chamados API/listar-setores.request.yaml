@@ -1,0 +1,24 @@
+$kind: http-request
+name: Listar setores
+method: GET
+url: '{{base_url}}/setores?page=0&size=10&sort=nome'
+queryParams:
+  - key: page
+    value: '0'
+  - key: size
+    value: '10'
+  - key: sort
+    value: 'nome'
+order: 1000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status 200', () => {
+        pm.response.to.have.status(200);
+      });
+      pm.test('Respuesta paginada', () => {
+        const body = pm.response.json();
+        pm.expect(body.content).to.be.an('array');
+        pm.expect(body).to.have.property('totalElements');
+      });

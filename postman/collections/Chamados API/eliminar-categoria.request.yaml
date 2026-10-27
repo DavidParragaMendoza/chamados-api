@@ -1,0 +1,12 @@
+$kind: http-request
+name: Eliminar categoría
+method: DELETE
+url: '{{base_url}}/categorias/{{nova_categoria_id}}'
+order: 6000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status 204', () => {
+        pm.response.to.have.status(204);
+      });

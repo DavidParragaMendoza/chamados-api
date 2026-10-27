@@ -1,0 +1,26 @@
+$kind: http-request
+name: Asumir chamado
+method: PATCH
+url: '{{base_url}}/chamados/{{novo_chamado_id}}/assumir'
+order: 13000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "tecnicoId": {{tecnico_id}}
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status 200', () => {
+        pm.response.to.have.status(200);
+      });
+      const body = pm.response.json();
+      pm.test('Chamado en atención y técnico asignado', () => {
+        pm.expect(body.status).to.eql('EM_ATENDIMENTO');
+        pm.expect(String(body.tecnicoId)).to.eql(String(pm.collectionVariables.get('tecnico_id')));
+      });

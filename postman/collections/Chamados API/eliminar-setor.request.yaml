@@ -1,0 +1,12 @@
+$kind: http-request
+name: Eliminar setor
+method: DELETE
+url: '{{base_url}}/setores/{{novo_setor_id}}'
+order: 3000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status 204', () => {
+        pm.response.to.have.status(204);
+      });

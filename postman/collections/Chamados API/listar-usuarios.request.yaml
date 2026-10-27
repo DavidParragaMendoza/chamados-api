@@ -1,0 +1,26 @@
+$kind: http-request
+name: Listar usuarios
+method: GET
+url: '{{base_url}}/usuarios?tipo=SOLICITANTE&page=0&size=10&sort=nome'
+queryParams:
+  - key: tipo
+    value: 'SOLICITANTE'
+  - key: page
+    value: '0'
+  - key: size
+    value: '10'
+  - key: sort
+    value: 'nome'
+order: 8000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status 200', () => {
+        pm.response.to.have.status(200);
+      });
+      pm.test('Respuesta paginada de usuarios', () => {
+        const body = pm.response.json();
+        pm.expect(body.content).to.be.an('array');
+        pm.expect(body.content.every((usuario) => usuario.tipo === 'SOLICITANTE')).to.eql(true);
+      });

@@ -1,0 +1,37 @@
+name: Chamados Local
+values:
+  - key: base_url
+    value: 'http://localhost:8080'
+    enabled: true
+    type: default
+    description: URL base de la API en ejecución local
+  - key: setor_id
+    value: '1'
+    enabled: true
+    type: default
+    description: Setor semilla TI
+  - key: categoria_id
+    value: '1'
+    enabled: true
+    type: default
+    description: Categoría semilla Redes
+  - key: solicitante_id
+    value: '1'
+    enabled: true
+    type: default
+    description: Usuario semilla solicitante
+  - key: tecnico_id
+    value: '2'
+    enabled: true
+    type: default
+    description: Usuario semilla técnico
+  - key: chamado_atendimento_id
+    value: '2'
+    enabled: true
+    type: default
+    description: Chamado semilla en EM_ATENDIMENTO
+  - key: chamado_resolvido_id
+    value: '3'
+    enabled: true
+    type: default
+    description: Chamado semilla RESOLVIDO

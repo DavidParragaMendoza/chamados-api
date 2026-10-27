@@ -1,0 +1,37 @@
+$kind: http-request
+name: Crear setor
+method: POST
+url: '{{base_url}}/setores'
+order: 2000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "nome": "{{setor_demo_nome}}",
+      "sigla": "{{setor_demo_sigla}}"
+    }
+scripts:
+  - type: beforeRequest
+    language: text/javascript
+    code: |-
+      const suffix = Date.now();
+      pm.collectionVariables.set('setor_demo_sigla', `DEMO${suffix}`);
+      pm.collectionVariables.set('setor_demo_nome', `Setor Demo ${suffix}`);
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status 201', () => {
+        pm.response.to.have.status(201);
+      });
+      pm.test('Location presente', () => {
+        pm.expect(pm.response.headers.get('Location')).to.be.a('string');
+      });
+      const body = pm.response.json();
+      pm.test('Setor creado con ID', () => {
+        pm.expect(body.id).to.be.a('number');
+        pm.expect(body.ativo).to.eql(true);
+      });
+      pm.collectionVariables.set('novo_setor_id', String(body.id));

@@ -1,0 +1,36 @@
+$kind: http-request
+name: Abrir chamado
+method: POST
+url: '{{base_url}}/chamados'
+order: 11000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "titulo": "{{chamado_demo_titulo}}",
+      "descricao": "Chamado creado por la colección de Postman.",
+      "local": "Laboratorio de Redes",
+      "prioridade": "ALTA",
+      "categoriaId": {{categoria_id}},
+      "solicitanteId": {{solicitante_id}}
+    }
+scripts:
+  - type: beforeRequest
+    language: text/javascript
+    code: |-
+      pm.collectionVariables.set('chamado_demo_titulo', `Chamado Demo ${Date.now()}`);
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status 201', () => {
+        pm.response.to.have.status(201);
+      });
+      const body = pm.response.json();
+      pm.test('Chamado abierto', () => {
+        pm.expect(body.status).to.eql('ABERTO');
+        pm.expect(body.dataAbertura).to.be.a('string');
+      });
+      pm.collectionVariables.set('novo_chamado_id', String(body.id));

@@ -1,0 +1,17 @@
+$kind: http-request
+name: Buscar usuario por ID
+method: GET
+url: '{{base_url}}/usuarios/{{novo_usuario_id}}'
+order: 9000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status 200', () => {
+        pm.response.to.have.status(200);
+      });
+      pm.test('Usuario solicitado', () => {
+        const body = pm.response.json();
+        pm.expect(String(body.id)).to.eql(String(pm.collectionVariables.get('novo_usuario_id')));
+        pm.expect(body.nome).to.eql('Usuario Demo');
+      });

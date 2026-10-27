@@ -1,0 +1,34 @@
+$kind: collection
+name: Chamados API
+description: |-
+  Colección funcional de la API REST del Sistema de Chamados do IFRN.
+  La autenticación está fuera del alcance: la identidad se envía en el cuerpo
+  de las acciones que la requieren (solicitanteId, tecnicoId, autorId, usuarioId).
+  Los IDs iniciales corresponden a los datos semilla de la migración V6.
+variables:
+  - key: base_url
+    value: 'http://localhost:8080'
+  - key: setor_id
+    value: '1'
+  - key: categoria_id
+    value: '1'
+  - key: solicitante_id
+    value: '1'
+  - key: tecnico_id
+    value: '2'
+  - key: chamado_id
+    value: '1'
+  - key: chamado_atendimento_id
+    value: '2'
+  - key: chamado_resolvido_id
+    value: '3'
+  - key: novo_setor_id
+    value: ''
+  - key: nova_categoria_id
+    value: ''
+  - key: novo_usuario_id
+    value: ''
+  - key: novo_chamado_id
+    value: ''
+  - key: chamado_cancelar_id
+    value: ''

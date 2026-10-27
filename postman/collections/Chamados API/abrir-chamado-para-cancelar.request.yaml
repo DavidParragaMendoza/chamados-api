@@ -1,0 +1,32 @@
+$kind: http-request
+name: Abrir chamado para cancelar
+method: POST
+url: '{{base_url}}/chamados'
+order: 15000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "titulo": "{{chamado_cancelar_titulo}}",
+      "descricao": "Chamado que será cancelado por el solicitante.",
+      "local": "Bloco A - Sala 101",
+      "prioridade": "MEDIA",
+      "categoriaId": {{categoria_id}},
+      "solicitanteId": {{solicitante_id}}
+    }
+scripts:
+  - type: beforeRequest
+    language: text/javascript
+    code: |-
+      pm.collectionVariables.set('chamado_cancelar_titulo', `Chamado Cancelable ${Date.now()}`);
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status 201', () => {
+        pm.response.to.have.status(201);
+      });
+      const body = pm.response.json();
+      pm.collectionVariables.set('chamado_cancelar_id', String(body.id));

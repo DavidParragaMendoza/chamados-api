@@ -1,0 +1,31 @@
+$kind: http-request
+name: Crear categoría
+method: POST
+url: '{{base_url}}/categorias'
+order: 4000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "nome": "{{categoria_demo_nome}}",
+      "setorId": {{setor_id}}
+    }
+scripts:
+  - type: beforeRequest
+    language: text/javascript
+    code: |-
+      pm.collectionVariables.set('categoria_demo_nome', `Categoria Demo ${Date.now()}`);
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status 201', () => {
+        pm.response.to.have.status(201);
+      });
+      const body = pm.response.json();
+      pm.test('Categoría asociada al setor', () => {
+        pm.expect(body.setorId).to.eql(Number(pm.collectionVariables.get('setor_id')));
+      });
+      pm.collectionVariables.set('nova_categoria_id', String(body.id));
