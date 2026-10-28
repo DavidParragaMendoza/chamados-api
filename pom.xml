@@ -27,7 +27,16 @@
 		<url/>
 	</scm>
 	<properties>
-		<java.version>26</java.version>
+		<java.version>21</java.version>
+		<!--
+			Credenciales de base de datos para el plugin flyway-maven-plugin.
+			Los perfiles "db-*-from-environment" de más abajo sobrescriben estos valores
+			cuando las variables de entorno DB_URL / DB_USER / DB_PASSWORD están definidas,
+			de modo que la variable de entorno siempre tiene prioridad sobre el default local.
+		-->
+		<db.url>jdbc:postgresql://localhost:5432/chamados_db</db.url>
+		<db.user>postgres</db.user>
+		<db.password>123456</db.password>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -53,6 +62,18 @@
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-flyway</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -81,6 +102,19 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.flywaydb</groupId>
+				<artifactId>flyway-maven-plugin</artifactId>
+				<version>${flyway.version}</version>
+				<configuration>
+					<url>${db.url}</url>
+					<user>${db.user}</user>
+					<password>${db.password}</password>
+					<locations>
+						<location>filesystem:src/main/resources/db/migration</location>
+					</locations>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -120,5 +154,47 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<!--
+			Perfiles que leen la configuración de base de datos desde las variables de entorno.
+			La activación por "env.DB_URL" (y equivalentes) funciona porque Maven expone cada
+			variable de entorno como una system property con prefijo "env.".
+			Cada variable es independiente: si solo se define una, las demás conservan su default local.
+		-->
+		<profile>
+			<id>db-url-from-environment</id>
+			<activation>
+				<property>
+					<name>env.DB_URL</name>
+				</property>
+			</activation>
+			<properties>
+				<db.url>${env.DB_URL}</db.url>
+			</properties>
+		</profile>
+		<profile>
+			<id>db-user-from-environment</id>
+			<activation>
+				<property>
+					<name>env.DB_USER</name>
+				</property>
+			</activation>
+			<properties>
+				<db.user>${env.DB_USER}</db.user>
+			</properties>
+		</profile>
+		<profile>
+			<id>db-password-from-environment</id>
+			<activation>
+				<property>
+					<name>env.DB_PASSWORD</name>
+				</property>
+			</activation>
+			<properties>
+				<db.password>${env.DB_PASSWORD}</db.password>
+			</properties>
+		</profile>
+	</profiles>
 
 </project>

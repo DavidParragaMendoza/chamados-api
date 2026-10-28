@@ -31,3 +31,13 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Gobernanza IA ###
+constitution.md
+AGENTS.md
+spec.md
+plan.md
+tasks.md
+specs/
+prompt-*.md
+.opencode/
